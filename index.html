@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Morning Workout Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+  <!-- ============ LOADER ============ -->
+  <div id="loader" class="loader">
+    <div class="loader-ring"></div>
+    <p class="loader-text">Warming up…</p>
+  </div>
+
+  <!-- ============ TOAST / ACHIEVEMENT POPUP LAYER ============ -->
+  <div id="toastLayer" class="toast-layer"></div>
+  <div id="achievementPopup" class="achievement-popup" aria-hidden="true">
+    <div class="achievement-glow"></div>
+    <div class="achievement-badge" id="achBadgeIcon">🏅</div>
+    <div class="achievement-copy">
+      <span class="achievement-eyebrow">Achievement unlocked</span>
+      <h3 id="achBadgeName">First Workout</h3>
+      <p id="achBadgeDesc">You showed up. That's the hardest part.</p>
+    </div>
+  </div>
+
+  <canvas id="confettiCanvas"></canvas>
+
+  <div class="app-shell">
+
+    <!-- ============ SIDEBAR ============ -->
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-mark">
+          <svg viewBox="0 0 32 32" width="22" height="22" fill="none">
+            <path d="M4 20L11 13L16 18L28 6" stroke="url(#gradMark)" stroke-width="3" stroke-linecap="round"
+              stroke-linejoin="round" />
+            <circle cx="28" cy="6" r="2.6" fill="url(#gradMark)" />
+            <defs>
+              <linearGradient id="gradMark" x1="4" y1="20" x2="28" y2="6">
+                <stop stop-color="#5B6CFF" />
+                <stop offset="1" stop-color="#00E5A0" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-title">Morning</span>
+          <span class="brand-sub">WORKOUT TRACKER</span>
+        </div>
+      </div>
+
+      <nav class="nav" id="mainNav">
+        <button class="nav-item active" data-view="dashboard"><span class="nav-ico">◆</span>Dashboard</button>
+        <button class="nav-item" data-view="planner"><span class="nav-ico">▦</span>Weekly Planner</button>
+        <button class="nav-item" data-view="workouts"><span class="nav-ico">✚</span>Today's Workout</button>
+        <button class="nav-item" data-view="progressions"><span class="nav-ico">▲</span>Progressions</button>
+        <button class="nav-item" data-view="analytics"><span class="nav-ico">◫</span>Analytics</button>
+        <button class="nav-item" data-view="achievements"><span class="nav-ico">✦</span>Achievements</button>
+        <button class="nav-item" data-view="goals"><span class="nav-ico">◎</span>Goals</button>
+        <button class="nav-item" data-view="health"><span class="nav-ico">♥</span>Health</button>
+        <button class="nav-item" data-view="timer"><span class="nav-ico">◷</span>Timer</button>
+        <button class="nav-item" data-view="settings"><span class="nav-ico">⚙</span>Settings</button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="xp-mini">
+          <div class="xp-mini-head">
+            <span id="levelName">Beginner</span>
+            <span id="xpMiniLabel">0 XP</span>
+          </div>
+          <div class="xp-bar-track">
+            <div class="xp-bar-fill" id="xpMiniFill"></div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <button class="mobile-nav-toggle" id="mobileNavToggle" aria-label="Toggle navigation">
+      <span></span><span></span><span></span>
+    </button>
+
+    <!-- ============ MAIN CONTENT ============ -->
+    <main class="main" id="mainContent">
+
+      <!-- ===================== DASHBOARD ===================== -->
+      <section class="view active" id="view-dashboard" data-view-panel="dashboard">
+        <header class="hero glass">
+          <div class="hero-left">
+            <span class="hero-eyebrow" id="heroDate">Saturday, July 4</span>
+            <h1 class="hero-greeting" id="heroGreeting">Good morning, Athlete</h1>
+            <p class="hero-quote" id="heroQuote">"Discipline is choosing between what you want now and what you want
+              most."</p>
+
+            <div class="hero-stats">
+              <div class="hero-stat">
+                <span class="hero-stat-value" data-count="0" id="statStreak">0</span>
+                <span class="hero-stat-label">Day streak</span>
+              </div>
+              <div class="hero-stat">
+                <span class="hero-stat-value" data-count="0" id="statLongest">0</span>
+                <span class="hero-stat-label">Longest streak</span>
+              </div>
+              <div class="hero-stat">
+                <span class="hero-stat-value" data-count="0" id="statTotal">0</span>
+                <span class="hero-stat-label">Workouts done</span>
+              </div>
+              <div class="hero-stat">
+                <span class="hero-stat-value" data-count="0" id="statWeekly">0%</span>
+                <span class="hero-stat-label">This week</span>
+              </div>
+            </div>
+
+            <button class="btn-start" id="startWorkoutBtn">
+              <span>Start Today's Workout</span>
+              <svg viewBox="0 0 24 24" width="18" height="18">
+                <path d="M8 5v14l11-7z" fill="currentColor" />
+              </svg>
+            </button>
+          </div>
+
+          <div class="hero-right">
+            <div class="ring-wrap">
+              <svg class="ring-svg" viewBox="0 0 200 200">
+                <circle class="ring-track" cx="100" cy="100" r="86"></circle>
+                <circle class="ring-progress" id="dashRing" cx="100" cy="100" r="86"></circle>
+              </svg>
+              <div class="ring-center">
+                <span class="ring-percent" id="dashRingPercent">0%</span>
+                <span class="ring-label">Today's progress</span>
+              </div>
+            </div>
+            <div class="hero-clock">
+              <span id="heroTime">00:00:00</span>
+              <span class="hero-day" id="heroDay">MON</span>
+            </div>
+          </div>
+        </header>
+
+        <div class="grid grid-3">
+          <div class="card glass">
+            <div class="card-head">
+              <h3>Weekly overview</h3>
+            </div>
+            <div class="week-strip" id="dashWeekStrip"></div>
+          </div>
+          <div class="card glass">
+            <div class="card-head">
+              <h3>Level progress</h3><span class="chip" id="levelChip">Beginner</span>
+            </div>
+            <div class="xp-block">
+              <div class="xp-row">
+                <span id="xpCurrentLabel">0 XP</span>
+                <span id="xpNextLabel">500 XP to Warrior</span>
+              </div>
+              <div class="xp-bar-track lg">
+                <div class="xp-bar-fill" id="dashXpFill"></div>
+              </div>
+            </div>
+            <div class="mini-stat-row">
+              <div><span id="dashPushMax">0</span><label>Push-up max</label></div>
+              <div><span id="dashPullMax">0</span><label>Pull-up max</label></div>
+            </div>
+          </div>
+          <div class="card glass">
+            <div class="card-head">
+              <h3>Contribution calendar</h3>
+            </div>
+            <div class="calendar-wrap" id="dashCalendar"></div>
+            <div class="calendar-legend"><span>Less</span><i class="lvl0"></i><i class="lvl1"></i><i class="lvl2"></i><i
+                class="lvl3"></i><i class="lvl4"></i><span>More</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== PLANNER ===================== -->
+      <section class="view" id="view-planner" data-view-panel="planner">
+        <div class="view-header">
+          <div>
+            <h2>Weekly Planner</h2>
+            <p class="view-sub">Pick two rest days. Rest days never break your streak.</p>
+          </div>
+        </div>
+        <div class="planner-grid" id="plannerGrid"></div>
+      </section>
+
+      <!-- ===================== TODAY'S WORKOUT ===================== -->
+      <section class="view" id="view-workouts" data-view-panel="workouts">
+        <div class="view-header">
+          <div>
+            <h2>Today's Workout</h2>
+            <p class="view-sub" id="workoutDateSub">Check off each movement as you complete it.</p>
+          </div>
+          <div class="view-header-actions">
+            <span class="chip chip-outline" id="workoutsCompletedChip">0 / 7 complete</span>
+          </div>
+        </div>
+        <div class="workout-grid" id="workoutGrid"></div>
+      </section>
+
+      <!-- ===================== PROGRESSIONS ===================== -->
+      <section class="view" id="view-progressions" data-view-panel="progressions">
+        <div class="view-header">
+          <div>
+            <h2>Strength Progressions</h2>
+            <p class="view-sub">A realistic weekly ramp toward your ultimate goal.</p>
+          </div>
+        </div>
+        <div class="grid grid-2">
+          <div class="card glass prog-card">
+            <div class="card-head">
+              <h3>Push-up Progression</h3><span class="chip">Week <span id="pushWeek">1</span></span>
+            </div>
+            <div class="prog-ring-row">
+              <div class="ring-wrap sm">
+                <svg class="ring-svg" viewBox="0 0 140 140">
+                  <circle class="ring-track" cx="70" cy="70" r="58"></circle>
+                  <circle class="ring-progress accent-warm" id="pushRing" cx="70" cy="70" r="58"></circle>
+                </svg>
+                <div class="ring-center"><span class="ring-percent" id="pushRingPct">0%</span><span
+                    class="ring-label">to goal</span></div>
+              </div>
+              <div class="prog-stats">
+                <div><label>Current max</label><span id="pushCurrentMax">22</span></div>
+                <div><label>Today's target</label><span id="pushTodayTarget">22</span></div>
+                <div><label>Personal best</label><span id="pushPB">22</span></div>
+                <div><label>Ultimate goal</label><span>100</span></div>
+                <div><label>Est. weeks remaining</label><span id="pushWeeksLeft">—</span></div>
+              </div>
+            </div>
+            <div class="prog-track" id="pushTrack"></div>
+          </div>
+
+          <div class="card glass prog-card">
+            <div class="card-head">
+              <h3>Pull-up Progression</h3><span class="chip">Week <span id="pullWeek">1</span></span>
+            </div>
+            <div class="prog-ring-row">
+              <div class="ring-wrap sm">
+                <svg class="ring-svg" viewBox="0 0 140 140">
+                  <circle class="ring-track" cx="70" cy="70" r="58"></circle>
+                  <circle class="ring-progress accent-secondary" id="pullRing" cx="70" cy="70" r="58"></circle>
+                </svg>
+                <div class="ring-center"><span class="ring-percent" id="pullRingPct">0%</span><span
+                    class="ring-label">to goal</span></div>
+              </div>
+              <div class="prog-stats">
+                <div><label>Current max</label><span id="pullCurrentMax">5</span></div>
+                <div><label>Today's target</label><span id="pullTodayTarget">5</span></div>
+                <div><label>Personal best</label><span id="pullPB">5</span></div>
+                <div><label>Ultimate goal</label><span>20</span></div>
+                <div><label>Est. weeks remaining</label><span id="pullWeeksLeft">—</span></div>
+              </div>
+            </div>
+            <div class="prog-track" id="pullTrack"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== ANALYTICS ===================== -->
+      <section class="view" id="view-analytics" data-view-panel="analytics">
+        <div class="view-header">
+          <div>
+            <h2>Analytics</h2>
+            <p class="view-sub">Your training, quantified.</p>
+          </div>
+        </div>
+
+        <div class="grid grid-4 stat-grid">
+          <div class="card glass stat-card"><span class="stat-num" id="anStreak">0</span><span class="stat-lbl">Current
+              streak</span></div>
+          <div class="card glass stat-card"><span class="stat-num" id="anLongest">0</span><span class="stat-lbl">Longest
+              streak</span></div>
+          <div class="card glass stat-card"><span class="stat-num" id="anDays">0</span><span class="stat-lbl">Total
+              workout days</span></div>
+          <div class="card glass stat-card"><span class="stat-num" id="anXp">0</span><span class="stat-lbl">Total
+              XP</span></div>
+          <div class="card glass stat-card"><span class="stat-num" id="anPush">0</span><span class="stat-lbl">Total
+              push-ups</span></div>
+          <div class="card glass stat-card"><span class="stat-num" id="anPull">0</span><span class="stat-lbl">Total
+              pull-ups</span></div>
+          <div class="card glass stat-card"><span class="stat-num" id="anSquat">0</span><span class="stat-lbl">Total
+              squats</span></div>
+          <div class="card glass stat-card"><span class="stat-num" id="anSitup">0</span><span class="stat-lbl">Total
+              sit-ups</span></div>
+        </div>
+
+        <div class="grid grid-2">
+          <div class="card glass">
+            <div class="card-head">
+              <h3>Weekly completion</h3>
+            </div>
+            <div class="bar-chart" id="weeklyBarChart"></div>
+          </div>
+          <div class="card glass">
+            <div class="card-head">
+              <h3>Monthly progress</h3>
+            </div>
+            <div class="bar-chart" id="monthlyBarChart"></div>
+          </div>
+        </div>
+
+        <div class="card glass">
+          <div class="card-head">
+            <h3>Workout history</h3>
+          </div>
+          <div class="history-list" id="historyList"></div>
+        </div>
+      </section>
+
+      <!-- ===================== ACHIEVEMENTS ===================== -->
+      <section class="view" id="view-achievements" data-view-panel="achievements">
+        <div class="view-header">
+          <div>
+            <h2>Achievements</h2>
+            <p class="view-sub">Earned through consistency, not luck.</p>
+          </div>
+        </div>
+        <div class="badge-grid" id="badgeGrid"></div>
+      </section>
+
+      <!-- ===================== GOALS ===================== -->
+      <section class="view" id="view-goals" data-view-panel="goals">
+        <div class="view-header">
+          <div>
+            <h2>Goals</h2>
+            <p class="view-sub">The targets that matter most right now.</p>
+          </div>
+        </div>
+        <div class="grid grid-4" id="goalsGrid"></div>
+      </section>
+
+      <!-- ===================== HEALTH ===================== -->
+      <section class="view" id="view-health" data-view-panel="health">
+        <div class="view-header">
+          <div>
+            <h2>Health Tracker</h2>
+            <p class="view-sub">The habits that support the reps.</p>
+          </div>
+        </div>
+        <div class="grid grid-3">
+          <div class="card glass health-card">
+            <h4>💧 Water intake</h4>
+            <div class="water-row" id="waterRow"></div>
+            <span class="health-sub" id="waterLabel">0 / 8 cups</span>
+          </div>
+          <div class="card glass health-card">
+            <h4>😴 Sleep hours</h4>
+            <input type="range" min="0" max="12" step="0.5" id="sleepSlider" class="slider">
+            <span class="health-sub" id="sleepLabel">0 h</span>
+          </div>
+          <div class="card glass health-card">
+            <h4>⚖ Weight</h4>
+            <input type="number" id="weightInput" class="text-input" placeholder="kg" step="0.1">
+          </div>
+          <div class="card glass health-card">
+            <h4>😊 Mood</h4>
+            <div class="emoji-picker" id="moodPicker">
+              <button data-val="1">😞</button><button data-val="2">😐</button><button data-val="3">🙂</button><button
+                data-val="4">😄</button><button data-val="5">🤩</button>
+            </div>
+          </div>
+          <div class="card glass health-card">
+            <h4>⚡ Energy level</h4>
+            <input type="range" min="1" max="5" step="1" id="energySlider" class="slider">
+            <span class="health-sub" id="energyLabel">Level 3</span>
+          </div>
+          <div class="card glass health-card">
+            <h4>📝 Daily notes</h4>
+            <textarea id="notesInput" class="text-input notes" placeholder="How did today feel?"></textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== TIMER ===================== -->
+      <section class="view" id="view-timer" data-view-panel="timer">
+        <div class="view-header">
+          <div>
+            <h2>Timer</h2>
+            <p class="view-sub">Warm-up, work, rest, cooldown — all in rhythm.</p>
+          </div>
+        </div>
+        <div class="grid grid-4" id="timerGrid"></div>
+      </section>
+
+      <!-- ===================== SETTINGS ===================== -->
+      <section class="view" id="view-settings" data-view-panel="settings">
+        <div class="view-header">
+          <div>
+            <h2>Settings</h2>
+            <p class="view-sub">Tune the app to how you train.</p>
+          </div>
+        </div>
+        <div class="grid grid-2">
+          <div class="card glass">
+            <div class="card-head">
+              <h3>Accent color</h3>
+            </div>
+            <div class="accent-picker" id="accentPicker">
+              <button data-accent="indigo" style="--sw:#5B6CFF" class="active"></button>
+              <button data-accent="mint" style="--sw:#00E5A0"></button>
+              <button data-accent="coral" style="--sw:#FF6A3D"></button>
+              <button data-accent="violet" style="--sw:#B26BFF"></button>
+              <button data-accent="sky" style="--sw:#33C2FF"></button>
+            </div>
+          </div>
+          <div class="card glass">
+            <div class="card-head">
+              <h3>Data management</h3>
+            </div>
+            <div class="settings-actions">
+              <button class="btn-secondary" id="exportBtn">Export data as JSON</button>
+              <label class="btn-secondary" for="importFile">Import backup</label>
+              <input type="file" id="importFile" accept="application/json" hidden>
+              <button class="btn-danger" id="resetBtn">Reset all data</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <audio id="beepSound" preload="auto"></audio>
+  <script src="script.js"></script>
+</body>
+
+</html>
